@@ -6,5 +6,5 @@ No code taken from timsjoberg/metalink-ruby
 Future development:
 * support for more rfc5854 metadata
 * usage samples
-* "metalink:pieces" support - with configurable piece size if possible
+* "metalink:pieces" support - with configurable piece size/count if possible
 ** Only supporting sha-256 or better.
