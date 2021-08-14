@@ -4,7 +4,7 @@ require 'pathname'
 require 'digest'
 require 'mime/types'
 
-class Metalink
+class Metalink4
 
   # application/metalink4+xml
   # https://en.wikipedia.org/wiki/Metalink

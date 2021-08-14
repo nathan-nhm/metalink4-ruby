@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 
-require_relative '../metalink'
+require_relative '../metalink4'
 
 File.open('test/16.meta4', 'w') { |f| f.write(
 
-Metalink.new(
+Metalink4.new(
   published: "2009-05-15T12:23:23Z",
   piece_count: 16,
   files: [ {
@@ -24,7 +24,7 @@ Metalink.new(
 
 
 File.open('test/1MB.meta4', 'w') { |f| f.write(
- Metalink.new(
+ Metalink4.new(
   published: "2009-05-15T12:23:23Z",
   piece_size: 1024 ** 2,
   files: [ {
@@ -44,7 +44,7 @@ File.open('test/1MB.meta4', 'w') { |f| f.write(
 
 
 File.open('test/single.meta4', 'w') { |f| f.write(
- Metalink.new(
+ Metalink4.new(
   published: "2009-05-15T12:23:23Z",
   files: [ {
     local_path: "test/10mb.bin",
