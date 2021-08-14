@@ -1,7 +1,4 @@
 
-#require './metalink'
-#Metalink.new( published: "2009-05-15T12:23:23Z", files: [ {local_path: "example.ext", identity: "Example",  language: "en", description: "A description of the example file for download.", version: 1.0, urls: [ "ftp://ftp.example.com/example.ext", { url: "http://example.com/example.ext", location: "fr"}, { url: "http://example.com/example.ext.torrent", priority: 2 } ] } ]).render
-
 require 'builder'
 require 'pathname'
 require 'digest'
@@ -17,6 +14,7 @@ class Metalink
     :updated,
     :origin,
     :origin_dynamic,
+    :piece_size,
     :xml
 
   def initialize(opts = {})
@@ -33,7 +31,7 @@ class Metalink
       self.files << {}
       
       self.files.last[:local_path] = Pathname.new(file[:local_path])
-		
+    
       self.files.last[:copyright] = file.fetch(:copyright, nil)
       self.files.last[:description] = file.fetch(:description, nil)
       self.files.last[:identity] = file.fetch(:identity, nil)
@@ -85,6 +83,14 @@ class Metalink
     self.origin_dynamic = opts.fetch(:origin_dynamic, false)
   
  
+    self.piece_size = opts.fetch(:piece_size, nil) #bytes
+  
+    if !self.piece_size && opts.fetch(:piece_count, nil)
+      self.piece_size = ((self.files.last[:local_path].size / opts.fetch(:piece_count, nil).to_i) / 1024.0).ceil * 1024 #so this will be a multiple of 32, ant the last file will be slightly smaller
+    end  
+  
+  
+ 
     self.xml = Builder::XmlMarkup.new
   end
 
@@ -101,7 +107,7 @@ class Metalink
     
       self.files.each do |file|
         metalink.file( name: file[:local_path] ) do |metalink_file| #MUST MANY, name is path/file no dots, no beginning with slash
-          metalink_file.copyright( file[:copyright] ) #MAY ONE, human readable
+          metalink_file.copyright( file[:copyright] ) if file[:copyright] #MAY ONE, human readable
           metalink_file.description( file[:description] ) if file[:description] #RECOMMENDED ONE, human readable
     
           metalink_file.identity( file[:identity] ) if file[:identity] # MAY ONE, human readable
@@ -121,8 +127,12 @@ class Metalink
             metalink_file.metaurl( url[:url].to_s, url.tap { |hs| hs.delete(:url) } )
           end
     
-          metalink_file.pieces( length: nil, type: "sha-256" ) do |pieces| #MAY MANY, lenth is byt length of all chunks but the last
-            pieces.hash nil
+          if self.piece_size
+            metalink_file.pieces( length: self.piece_size, type: "sha-256" ) do |pieces| #MAY MANY, length is byte length of all chunks but the last
+              (0...file[:local_path].size).step(self.piece_size).each do |offset|
+                pieces.hash Digest::SHA256.hexdigest(File.read(file[:local_path], self.piece_size, offset))
+              end
+            end
           end
           
           metalink_file.publisher(name: file[:publisher_name], url: file[:publisher_url].to_s) if file[:publisher_name] || file[:publisher_url] #MAY ONE, human readable name & URI
