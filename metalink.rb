@@ -91,7 +91,7 @@ class Metalink
   
   
  
-    self.xml = Builder::XmlMarkup.new
+    self.xml = Builder::XmlMarkup.new(indent: 2)
   end
 
   def render

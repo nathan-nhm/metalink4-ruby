@@ -1,1 +1,33 @@
-<?xml version="1.0" encoding="UTF-8"?><metalink xmlns="urn:ietf:params:xml:ns:metalink"><generator>Sudrien/metalink-ruby 0.1</generator><file name="test/10mb.bin"><description>A description of the example file for download.</description><identity>Example</identity><hash type="sha-256">f9aa8bb18fc4f34efe20093665a2f25969350f9208c26b035d3000d7bc81ca4f</hash><language>en</language><url priority="1">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin</url><url location="nl" priority="1">http://download.xs4all.nl/test/10mb.bin</url><metaurl priority="2" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent</metaurl><pieces length="625664" type="sha-256"><hash>7b07ac3b6b0423ebb64d9927a120773f2eff0c78a6b28f69e9a467eda4effbd6</hash><hash>108c7931aed21ec143f32cd5a8f09d934deb76cfdd6c9bc2f48cedac9ade3a57</hash><hash>9088f7885d6b14240ad99309b498aa7186918bfa4f1e0bbfa551419b51e37552</hash><hash>46aa0400813cc6830f9ee7f7689f1551b4a4957f7a5a8dd82b1afef9d80ccf20</hash><hash>e24e41293674ddfa9a961bb190876fd3b80d3d62471025e674af73f69ae0b2f2</hash><hash>81aa8ad7d2a9ca088aa2dccfe959accd5344543292b4095b52e7894c8ffd2da6</hash><hash>8ae215a28b3727b24556b21bc64fb2e24d79be008ab3776053f228f3bf336f7e</hash><hash>068e1a3d50ce2d5c3d0bf3b51bac1ee30fc11a56753f4b0d808d890dad26af64</hash><hash>7382c03be2e61ef2ab61356064c18964c6a17b5fc7f67a75c461a4477dc70aa6</hash><hash>3379e066774ea2fc44041722beaae1ccc16a34d3cc50136bb1cc1b818a8aae09</hash><hash>392d9f997f6104792da3ba63eda90f4042570c5cd5cc034a2ffd34e840eb0965</hash><hash>d6d1846781bffa6c44d020c9e7d0a177052a0e056c1a331219209a73f591642c</hash><hash>be361430c5bb00c2855a8f0320dacf1e0c099e33b87ae39eab65f695c0eca750</hash><hash>e7ee4844169cd75f4410403196831ea6e00117351e0770016f252de9b3d7935a</hash><hash>b83d95c9f06a3e38485c0ff8cebb0d8a41dd872e34d9e631c225b35cb6163d5c</hash><hash>efd449ef2e2b245f8e873e6e7e42e9c84cef2295879f83850ae1c1cb069debce</hash></pieces><size>10000000</size><version>1.0</version></file></metalink>
+<?xml version="1.0" encoding="UTF-8"?>
+<metalink xmlns="urn:ietf:params:xml:ns:metalink">
+  <generator>Sudrien/metalink-ruby 0.1</generator>
+  <file name="test/10mb.bin">
+    <description>A description of the example file for download.</description>
+    <identity>Example</identity>
+    <hash type="sha-256">f9aa8bb18fc4f34efe20093665a2f25969350f9208c26b035d3000d7bc81ca4f</hash>
+    <language>en</language>
+    <url priority="1">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin</url>
+    <url location="nl" priority="1">http://download.xs4all.nl/test/10mb.bin</url>
+    <metaurl priority="2" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent</metaurl>
+    <pieces length="625664" type="sha-256">
+      <hash>7b07ac3b6b0423ebb64d9927a120773f2eff0c78a6b28f69e9a467eda4effbd6</hash>
+      <hash>108c7931aed21ec143f32cd5a8f09d934deb76cfdd6c9bc2f48cedac9ade3a57</hash>
+      <hash>9088f7885d6b14240ad99309b498aa7186918bfa4f1e0bbfa551419b51e37552</hash>
+      <hash>46aa0400813cc6830f9ee7f7689f1551b4a4957f7a5a8dd82b1afef9d80ccf20</hash>
+      <hash>e24e41293674ddfa9a961bb190876fd3b80d3d62471025e674af73f69ae0b2f2</hash>
+      <hash>81aa8ad7d2a9ca088aa2dccfe959accd5344543292b4095b52e7894c8ffd2da6</hash>
+      <hash>8ae215a28b3727b24556b21bc64fb2e24d79be008ab3776053f228f3bf336f7e</hash>
+      <hash>068e1a3d50ce2d5c3d0bf3b51bac1ee30fc11a56753f4b0d808d890dad26af64</hash>
+      <hash>7382c03be2e61ef2ab61356064c18964c6a17b5fc7f67a75c461a4477dc70aa6</hash>
+      <hash>3379e066774ea2fc44041722beaae1ccc16a34d3cc50136bb1cc1b818a8aae09</hash>
+      <hash>392d9f997f6104792da3ba63eda90f4042570c5cd5cc034a2ffd34e840eb0965</hash>
+      <hash>d6d1846781bffa6c44d020c9e7d0a177052a0e056c1a331219209a73f591642c</hash>
+      <hash>be361430c5bb00c2855a8f0320dacf1e0c099e33b87ae39eab65f695c0eca750</hash>
+      <hash>e7ee4844169cd75f4410403196831ea6e00117351e0770016f252de9b3d7935a</hash>
+      <hash>b83d95c9f06a3e38485c0ff8cebb0d8a41dd872e34d9e631c225b35cb6163d5c</hash>
+      <hash>efd449ef2e2b245f8e873e6e7e42e9c84cef2295879f83850ae1c1cb069debce</hash>
+    </pieces>
+    <size>10000000</size>
+    <version>1.0</version>
+  </file>
+</metalink>
