@@ -10,6 +10,15 @@ All rfc5854 metadata in the process of being supported. Only supporting sha-256,
 Chunk checksumming is supported, for detecthing errors early on bad internet connections. Specify piece_size (in bytes) or piece_count.
 
 
+
+(Gentoo did not have metalink USE flag enabled by default)
+
+wget --input-metalink=1MB.meta4
+
+aria2c 1MB.meta4
+
+
+
 Future development:
 * usage samples
 * more passed-in data validation.
