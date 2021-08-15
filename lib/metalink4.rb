@@ -5,14 +5,15 @@ require 'digest'
 require 'mime/types'
 require 'time'
 
-
-
+##
+# Describes the download urls of files listed in the Metalink 4 file
 class Metalink4FileUrl
   attr_accessor :url,
     :priority,
     :location
-
-  #set it now or later, should I care?
+  ##
+  # Options: url, location, priority.
+  # if only a string it profided it must be the URL.
   def initialize(url = {})
     self.priority = 1
     case url
@@ -27,23 +28,27 @@ class Metalink4FileUrl
     end
   end
 
+  ##
   # URI of remote file, HTTPS, HTTP, FTP, Bittorrent, etc.
   def url=(v)
     @url = URI.parse(v)
   end
   
+  ##
   # ISO3166-1 2 character country code
   def location=(v)
     raise "Improper format" if v && v.to_s !~ /[a-z]{2}/
     @location = v
   end
   
+  ##
   # Priority this url is to be considered in. 1 is top level, 999999 is absolulte last. Duplicates allowed.
   def priority=(v)
     @priority = [[v.to_i, 1].max, 999999].min 
   end
   
-  # add details to builder. Requires access to parent file so we can desipher if a url or metaurl is appropriate
+  ##
+  # Fragement call for builder.
   def render(builder_metalink_file, local_path)
     if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
       builder_metalink_file.url(
@@ -63,7 +68,8 @@ class Metalink4FileUrl
   end
 end
 
-
+##
+#Describes the files listed in the Metalink 4 file
 class Metalink4File
 
   attr_accessor :init,
@@ -82,7 +88,8 @@ class Metalink4File
     :piece_size,
     :piece_count
     
-  
+  ##
+  # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
   def initialize(file = {})
   
     raise "local path required" unless file.fetch(:local_path, nil)
@@ -111,25 +118,32 @@ class Metalink4File
     self.piece_count = file.fetch(:piece_count, nil) 
   end
   
-  # use File.chdir if you must
+  ##
+  # Path of local instance of file, relative to current working directory. 
+  # relative path may be reproduced on the client side. MUST NOT include '.' or '..'
+  # Must not include an absolute path ( begin with / or drive letter )
+  #
+  # use File.chdir if you must to achive this
   def local_path=(v)
     @local_path = Pathname.new(v)
     raise "No absolute paths" if @local_path.absolute?
     raise "No dots" if @local_path.to_s =~ /\.\/|\.\\/
     @local_path
   end
-
-  #Overrides piece_count if set
-  #minimum size of 1KB for a piece
+  
+  ##
+  # Overrides piece_count if set
+  # minimum size of 1KB for a piece
   def piece_size=(v)
     return unless v
     @piece_count = nil
     @piece_size = [v, 1024].max
   end
 
-  #Overrides piece_size if set
-  #This will be a multiple of 1024, and the last file will be slightly smaller
-  #this means 1KB is the minimum size for a piece
+  ##
+  # Overrides piece_size if set
+  # This will be a multiple of 1024, and the last file will be slightly smaller
+  # this means 1KB is the minimum size for a piece
   def piece_count=(v)
     return if v.nil?
     @piece_count = v
@@ -138,8 +152,9 @@ class Metalink4File
   
   
   
+  ##
+  # Fragement call for builder.
   def render(builder_metalink, metalink4)
-  
     metalink4.file( name: self.local_path ) do |metalink_file| #MUST MANY, name is path/file no dots, no beginning with slash
       metalink_file.copyright( self.copyright ) if self.copyright #MAY ONE, human readable
       metalink_file.description( self.description ) if self.description #RECOMMENDED ONE, human readable
@@ -159,8 +174,6 @@ class Metalink4File
           )
       end
 
-
-#throw [self.piece_size, self.piece_count, self.init]
       if self.piece_size
         metalink_file.pieces( length: self.piece_size, type: "sha-256" ) do |pieces| #MAY MANY, length is byte length of all chunks but the last
           (0...self.local_path.size).step(self.piece_size).each do |offset|
@@ -169,24 +182,22 @@ class Metalink4File
         end
       end
           
-    metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url #MAY ONE, human readable name & URI
-    metalink_file.signature( self.signature, mediatype: MIME::Types.type_for( self.signature ) ) if self.signature #MAY MANY, application/pgp-signature or somthing
+      metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url #MAY ONE, human readable name & URI
+      metalink_file.signature( self.signature, mediatype: MIME::Types.type_for( self.signature ) ) if self.signature #MAY MANY, application/pgp-signature or somthing
     
-    metalink_file.size( self.local_path.size ) #SHOULD, file bytesize
-    metalink_file.version( self.version ) if self.version #MAY ONE, 3.5 for firefox 3.5
-    
+      metalink_file.size( self.local_path.size ) #SHOULD, file bytesize
+      metalink_file.version( self.version ) if self.version #MAY ONE, 3.5 for firefox 3.5
+    end
   end
   
-  
-  
 end
 
-end
-
+##
+# Describes the base Metalink 4 file as specified by rfc5854
+# If served, it should have a header of application/metalink4+xml
+# https://en.wikipedia.org/wiki/Metalink
 class Metalink4
 
-  # application/metalink4+xml
-  # https://en.wikipedia.org/wiki/Metalink
 
   attr_accessor :files,
     :published,
@@ -197,7 +208,8 @@ class Metalink4
     
     
     
-
+  ##
+  # Options: files, published, updated, origin, origin_dynamic
   def initialize(opts = {})
   
     raise "files not specified" if opts.fetch(:files, []).empty?
@@ -218,6 +230,7 @@ class Metalink4
     self.xml = Builder::XmlMarkup.new(indent: 2)
   end
   
+  ##
   # original publish date. Equivelent of ActiveRecord's created_at
   def published=(v)
     case v
@@ -231,6 +244,7 @@ class Metalink4
     @published 
   end
   
+  ##
   # last publish date. Equivelent of ActiveRecord's updated_at
   def updated=(v)
     case v
@@ -244,17 +258,21 @@ class Metalink4
     @updated 
   end
   
+  ##
   # url this meta4 file was made available at. Updates are potentially at the same url.
   def origin=(v)
     @origin = v ? URI.parse(v) : nil
   end
   
-  # the meta4 file may have an update available
+  ##
+  # if the meta4 file may have an update available
   def origin_dynamic=(v)
     @origin = !!v
   end
   
 
+  ##
+  # Render to XML
   def render
     self.xml.instruct! :xml, version: "1.0", encoding: "UTF-8"
     self.xml.metalink( xmlns: "urn:ietf:params:xml:ns:metalink" ) do |metalink| #must
