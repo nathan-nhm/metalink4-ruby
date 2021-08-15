@@ -1,0 +1,15 @@
+Gem::Specification.new do |s|
+  s.name        = 'metalink4-ruby'
+  s.version     = '0.1'
+  s.summary     = "Class to format Metalink 4 / rfc5854 / .meta4 XML"
+  s.description = "Class to format Metalink 4 / rfc5854 / .meta4 XML"
+  s.authors     = ["Sudrien"]
+  s.email       = '_+github@sudrien.net'
+  s.files       = ['lib/metalink4.rb','metalink4-ruby.gemfile','README.md','rfc5854.txt','LICENSE','test/test.rb']
+  s.require_paths = ["lib"]
+  s.homepage    = 'https://github.com/Sudrien/metalink4-ruby'
+  s.license     = 'MIT'
+
+  s.add_runtime_dependency "builder"
+  s.add_runtime_dependency "mime-types"
+end
