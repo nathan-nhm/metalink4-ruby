@@ -30,12 +30,15 @@ class Metalink4FileUrl
 
   ##
   # URI of remote file, HTTPS, HTTP, FTP, Bittorrent, etc.
+  # One, Required.
   def url=(v)
     @url = URI.parse(v)
   end
   
   ##
   # ISO3166-1 2 character country code
+  # Client may ignore this field if a country code is not explicitly specified.
+  # One, optional.
   def location=(v)
     raise "Improper format" if v && v.to_s !~ /[a-z]{2}/
     @location = v
@@ -43,12 +46,14 @@ class Metalink4FileUrl
   
   ##
   # Priority this url is to be considered in. 1 is top level, 999999 is absolulte last. Duplicates allowed.
+  # Defaults to 1 if not specified.
   def priority=(v)
     @priority = [[v.to_i, 1].max, 999999].min 
   end
   
   ##
   # Fragement call for builder.
+  # For internal use.
   def render(builder_metalink_file, local_path)
     if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
       builder_metalink_file.url(
@@ -124,6 +129,7 @@ class Metalink4File
   # Must not include an absolute path ( begin with / or drive letter )
   #
   # use File.chdir if you must to achive this
+  # Required
   def local_path=(v)
     @local_path = Pathname.new(v)
     raise "No absolute paths" if @local_path.absolute?
@@ -132,6 +138,7 @@ class Metalink4File
   end
   
   ##
+  # One of two options to enable piece hashes
   # Overrides piece_count if set
   # minimum size of 1KB for a piece
   def piece_size=(v)
@@ -141,6 +148,7 @@ class Metalink4File
   end
 
   ##
+  # One of two options to enable piece hashes
   # Overrides piece_size if set
   # This will be a multiple of 1024, and the last file will be slightly smaller
   # this means 1KB is the minimum size for a piece
@@ -151,21 +159,129 @@ class Metalink4File
   end
   
   
+
+
+
+
+  ##
+  # The copyright of the file, human readble. URL should be ok, Or a full text.
+  # Lack of this field does not assert ANY paticular state of copyright.
+  # One, optional.
+  def copyright=(v)
+    @copyright = v
+  end
+  
   
   ##
-  # Fragement call for builder.
+  # if "Firefox 3.5" the description would be "A Web Browser"
+  # Human readable.
+  # One, optional, but reccomended.
+  def description=(v)
+    @description = v
+  end
+  
+  
+  ##
+  # if "Firefox 3.5" the identity would be "Firefox"
+  # Human readable.
+  # One, optional.
+  def identity=(v)
+    @identity = v
+  end
+  
+  ##
+  # The language supported by the file. 
+  # In rfc5646 format
+  # See: https://datatracker.ietf.org/doc/html/rfc5646
+  # One or more, optional.
+  def language=(v)
+    @language ||= []
+    @language << v if v.is_a?(String)
+  end
+  
+  ##
+  # Logo is the URL of an image file associated with this file. This can be an icon or avatar.
+  # It should be square, and support low resolutions.
+  # One, optional.
+  def logo=(v)
+    @logo = v ? URI.parse(v) : nil
+  end
+  
+  ##
+  # Operating System this download supports. One or more, optional.
+  # See IANA registry named "Operating System Names"
+  # at https://www.iana.org/assignments/operating-system-names/operating-system-names.xhtml
+  def os=(v)
+    @os ||= []
+    @os << v if v.is_a?(String)
+  end
+  
+  ##
+  # The creator of this meta4 file, which may be differnt than the files refrenced within.
+  # One, Optional.
+  def publisher_name=(v)
+    @publisher_name = v
+  end
+  
+  ##
+  # THE URL of the publisher, a descriptive page, NOT the source of this .meta4 file.
+  # One, Optional.
+  def publisher_url=(v)
+    @publisher_url = URI.parse(v)
+  end
+  
+  
+  ##
+  # OpenPGP Or somthing. The signature should match the referenced file.
+  # One, Optional.
+  def signature=(v)
+    @signature ||= []
+    @signature << v if v.is_a?(String)
+  end
+  
+  ##
+  # if "Firefox 3.5" the version would be "3.5"
+  # Human readable.
+  # One, optional.
+  def version=(v)
+    @version = v
+  end
+  
+  
+  
+  
+  ##
+  # Fragement call for builder. 
+  # For internal use.
   def render(builder_metalink, metalink4)
-    metalink4.file( name: self.local_path ) do |metalink_file| #MUST MANY, name is path/file no dots, no beginning with slash
-      metalink_file.copyright( self.copyright ) if self.copyright #MAY ONE, human readable
-      metalink_file.description( self.description ) if self.description #RECOMMENDED ONE, human readable
+    metalink4.file( name: self.local_path ) do |metalink_file|
+      metalink_file.copyright( self.copyright ) if self.copyright
+      metalink_file.description( self.description ) if self.description
     
-      metalink_file.identity( self.identity ) if self.identity # MAY ONE, human readable
+      metalink_file.identity( self.identity ) if self.identity 
         
-      metalink_file.hash( Digest::SHA256.file( self.local_path ).hexdigest, type: "sha-256" ) #MAY MANY
-      metalink_file.language( self.language ) if self.language #MAY MANY, rfc5646
-        
-      metalink_file.logo( self.logo ) if self.logo #MAY ONE, url, square, low res compatible
-      metalink_file.os( self.os ) if self.os #MAY MANY, IANA registry named "Operating System Names"
+      metalink_file.hash( Digest::SHA256.file( self.local_path ).hexdigest, type: "sha-256" ) #MAY MANY 
+      
+      case self.language
+      when Array
+        self.language.each do |language|
+          metalink_file.language( language )
+        end
+      when String
+        metalink_file.language( self.language )
+      end
+
+      metalink_file.logo( self.logo ) if self.logo
+      
+      case self.os
+      when Array
+        self.os.each do |os|
+          metalink_file.os( os )
+        end
+      when String
+        metalink_file.os( self.os )
+      end
+      
 
       self.urls.each do |file_url|
         file_url.render(
@@ -182,11 +298,19 @@ class Metalink4File
         end
       end
           
-      metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url #MAY ONE, human readable name & URI
-      metalink_file.signature( self.signature, mediatype: MIME::Types.type_for( self.signature ) ) if self.signature #MAY MANY, application/pgp-signature or somthing
+      metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url
+
+      case self.signature
+      when Array
+        self.signature.each do |signature|
+          metalink_file.signature( signature, mediatype: MIME::Types.type_for( signature ) )
+        end
+      when String
+        metalink_file.signature( self.signature, mediatype: MIME::Types.type_for( self.signature ) )
+      end
     
       metalink_file.size( self.local_path.size ) #SHOULD, file bytesize
-      metalink_file.version( self.version ) if self.version #MAY ONE, 3.5 for firefox 3.5
+      metalink_file.version( self.version ) if self.version
     end
   end
   
@@ -232,6 +356,7 @@ class Metalink4
   
   ##
   # original publish date. Equivelent of ActiveRecord's created_at
+  # One, Optional.
   def published=(v)
     case v
     when Time, nil
@@ -246,6 +371,7 @@ class Metalink4
   
   ##
   # last publish date. Equivelent of ActiveRecord's updated_at
+  # One, Optional.
   def updated=(v)
     case v
     when Time, nil
@@ -260,29 +386,32 @@ class Metalink4
   
   ##
   # url this meta4 file was made available at. Updates are potentially at the same url.
+  # One, Optional, but should.
   def origin=(v)
     @origin = v ? URI.parse(v) : nil
   end
   
   ##
   # if the meta4 file may have an update available
+  # Defaults to false.
   def origin_dynamic=(v)
     @origin = !!v
   end
   
 
   ##
-  # Render to XML
+  # Render to XML, returns string.
+  #
+  # Checksums are calculated at this point. ONLY sha-256 is calculated.
   def render
     self.xml.instruct! :xml, version: "1.0", encoding: "UTF-8"
-    self.xml.metalink( xmlns: "urn:ietf:params:xml:ns:metalink" ) do |metalink| #must
+    self.xml.metalink( xmlns: "urn:ietf:params:xml:ns:metalink" ) do |metalink|
     
       metalink.generator("Sudrien/metalink-ruby 0.2.0") #may
-      metalink.origin( self.origin, dynamic: self.origin_dynamic ) if self.origin #should
+      metalink.origin( self.origin, dynamic: self.origin_dynamic ) if self.origin
       
-      metalink.published( self.published.strftime('%FT%T%:z') ) if self.published #may, earlier
-      metalink.updated( self.updated.strftime('%FT%T%:z') ) if self.updated #may, later
-    
+      metalink.published( self.published.strftime('%FT%T%:z') ) if self.published
+      metalink.updated( self.updated.strftime('%FT%T%:z') ) if self.updated
     
       self.files.each do |file|
         file.render(self, metalink)
