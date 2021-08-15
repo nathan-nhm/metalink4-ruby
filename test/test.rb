@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 
-require_relative '../metalink4'
+require_relative '../lib/metalink4'
 
 File.open('test/16.meta4', 'w') { |f| f.write(
 
 Metalink4.new(
   published: "2009-05-15T12:23:23Z",
-  piece_count: 16,
   files: [ {
     local_path: "test/10mb.bin",
     identity: "Example",
@@ -17,7 +16,8 @@ Metalink4.new(
       "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin",
       { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl"},
       { url: "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent", priority: 2 }
-      ]
+      ],
+    piece_count: 16
     } ]
   ).render
 ) }
@@ -26,7 +26,6 @@ Metalink4.new(
 File.open('test/1MB.meta4', 'w') { |f| f.write(
  Metalink4.new(
   published: "2009-05-15T12:23:23Z",
-  piece_size: 1024 ** 2,
   files: [ {
     local_path: "test/10mb.bin",
     identity: "Example",
@@ -37,7 +36,8 @@ File.open('test/1MB.meta4', 'w') { |f| f.write(
       "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin",
       { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl"},
       { url: "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent", priority: 2 }
-      ]
+      ],
+    piece_size: 1024 ** 2
     } ]
   ).render
 ) }

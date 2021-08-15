@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metalink xmlns="urn:ietf:params:xml:ns:metalink">
-  <generator>Sudrien/metalink-ruby 0.1</generator>
+  <generator>Sudrien/metalink-ruby 0.2.0</generator>
+  <published>2009-05-15T12:23:23+00:00</published>
   <file name="test/10mb.bin">
     <description>A description of the example file for download.</description>
     <identity>Example</identity>
