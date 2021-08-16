@@ -13,9 +13,9 @@ Metalink4.new(
     description: "A description of the example file for download.",
     version: 1.0,
     urls: [
-      "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin",
-      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl"},
-      { url: "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent", priority: 2 }
+      "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin",
+      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl", priority: 2 },
+      { url: "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent", priority: 3 }
       ],
     piece_count: 16
     } ]
@@ -33,9 +33,9 @@ File.open('test/1MB.meta4', 'w') { |f| f.write(
     description: "A description of the example file for download.",
     version: 1.0,
     urls: [
-      "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin",
-      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl"},
-      { url: "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent", priority: 2 }
+      "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin",
+      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl", priority: 2 },
+      { url: "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent", priority: 3 }
       ],
     piece_size: 1024 ** 2
     } ]
@@ -53,10 +53,15 @@ File.open('test/single.meta4', 'w') { |f| f.write(
     description: "A description of the example file for download.",
     version: 1.0,
     urls: [
-      "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin",
-      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl"},
-      { url: "https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent", priority: 2 }
+      "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin",
+      { url: "http://download.xs4all.nl/test/10mb.bin", location: "nl", priority: 2 },
+      { url: "https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent", priority: 3 }
       ]
     } ]
   ).render
+) }
+
+
+File.open('test/single_again.meta4', 'w') { |f| f.write(
+  Metalink4.read('test/1MB.meta4').render
 ) }

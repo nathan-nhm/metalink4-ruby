@@ -4,6 +4,7 @@ require 'pathname'
 require 'digest'
 require 'mime/types'
 require 'time'
+require 'nokogiri'
 
 ##
 # Describes the download urls of files listed in the Metalink 4 file
@@ -32,7 +33,7 @@ class Metalink4FileUrl
   # URI of remote file, HTTPS, HTTP, FTP, Bittorrent, etc.
   # One, Required.
   def url=(v)
-    @url = URI.parse(v)
+    @url = v ? URI.parse(v) : nil
   end
   
   ##
@@ -55,20 +56,29 @@ class Metalink4FileUrl
   # Fragement call for builder.
   # For internal use.
   def render(builder_metalink_file, local_path)
-    if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
-      builder_metalink_file.url(
-        self.url.to_s, {
-        location: self.location,
-        priority: self.priority || 1,
-        }.compact
-        )
-    else
-      builder_metalink_file.metaurl(
-        self.url.to_s, {
-        priority: self.priority || 1,
-        mediatype: self.url.path =~ /\.torrent/ ? "torrent" : MIME::Types.type_for( self.url.path )
-        }.compact
-        )
+  
+  
+    begin
+  
+      if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
+        builder_metalink_file.url(
+          self.url.to_s, {
+            location: self.location,
+            priority: self.priority || 1,
+            }.compact
+          )
+      else
+        builder_metalink_file.metaurl(
+          self.url.to_s, {
+            priority: self.priority || 1,
+            mediatype: self.url.path =~ /\.torrent/ ? "torrent" : MIME::Types.type_for( self.url.path )
+            }.compact
+          )
+      end
+    
+    rescue
+     puts [local_path, self.url]
+     throw [local_path, self.url]
     end
   end
 end
@@ -97,11 +107,10 @@ class Metalink4File
   # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
   def initialize(file = {})
   
-    raise "local path required" unless file.fetch(:local_path, nil)
   
     self.init = file
   
-    self.local_path = file[:local_path]
+    self.local_path = file.fetch(:local_path, nil)
     self.copyright = file.fetch(:copyright, nil)
     self.description = file.fetch(:description, nil)
     self.identity = file.fetch(:identity, nil)
@@ -131,6 +140,7 @@ class Metalink4File
   # use File.chdir if you must to achive this
   # Required
   def local_path=(v)
+    return unless v
     @local_path = Pathname.new(v)
     raise "No absolute paths" if @local_path.absolute?
     raise "No dots" if @local_path.to_s =~ /\.\/|\.\\/
@@ -227,7 +237,7 @@ class Metalink4File
   # THE URL of the publisher, a descriptive page, NOT the source of this .meta4 file.
   # One, Optional.
   def publisher_url=(v)
-    @publisher_url = URI.parse(v)
+    @publisher_url = v ? URI.parse(v) : nil
   end
   
   
@@ -254,6 +264,9 @@ class Metalink4File
   # Fragement call for builder. 
   # For internal use.
   def render(builder_metalink, metalink4)
+  
+    raise "local path required" unless @local_path
+  
     metalink4.file( name: self.local_path ) do |metalink_file|
       metalink_file.copyright( self.copyright ) if self.copyright
       metalink_file.description( self.description ) if self.description
@@ -336,13 +349,12 @@ class Metalink4
   # Options: files, published, updated, origin, origin_dynamic
   def initialize(opts = {})
   
-    raise "files not specified" if opts.fetch(:files, []).empty?
   
     opts = opts.transform_keys {|key| key.to_sym }
   
     self.files = []
     
-    opts.fetch(:files).each do |file|
+    opts.fetch(:files, []).each do |file|
       self.files << Metalink4File.new(file)
     end
 
@@ -404,6 +416,9 @@ class Metalink4
   #
   # Checksums are calculated at this point. ONLY sha-256 is calculated.
   def render
+  
+    raise "files not specified" if self.files.empty?
+  
     self.xml.instruct! :xml, version: "1.0", encoding: "UTF-8"
     self.xml.metalink( xmlns: "urn:ietf:params:xml:ns:metalink" ) do |metalink|
     
@@ -421,4 +436,63 @@ class Metalink4
   end
 
 
+
+# require_relative 'lib/metalink4'
+# Metalink4.read('test/single.meta4')
+  def self.read(potential_file_path)
+
+    begin
+      if File.exist?(potential_file_path)
+        doc = File.open(potential_file_path) { |f| Nokogiri::XML(f) }
+      elsif potential_file_path.is_a?(String)
+        doc = Nokogiri::XML(potential_file_path)
+      end
+    rescue
+      raise "%s Not an XML File" % potential_file_path
+    end
+
+    ret = Metalink4.new
+    ret.published = doc.at("metalink > published").content 
+    ret.updated = doc.at("metalink > updated").content rescue nil
+    ret.origin = doc.at("metalink > origin").content rescue nil
+    ret.origin_dynamic = doc.at("metalink > origin[dynamic]").content == "true" rescue false
+
+    doc.search("metalink > file").each do |file|
+    
+      ret.files << Metalink4File.new
+      ret.files.last.local_path = file.attr("name")
+      ret.files.last.copyright = file.at("copyright").content rescue nil
+      ret.files.last.description = file.at("description").content rescue nil
+      ret.files.last.identity = file.at("identity").content rescue nil
+      ret.files.last.language = file.at("language").content rescue nil
+      ret.files.last.logo = file.at("logo").content rescue nil
+      ret.files.last.os = file.at("os").content rescue nil
+      ret.files.last.publisher_name = file.at("publisher[name]").content rescue nil
+      ret.files.last.publisher_url = file.at("publisher[url]").content rescue nil
+      ret.files.last.signature = file.at("signature").content rescue nil
+      ret.files.last.version = file.at("version").content rescue nil
+
+      file.search("url").each do |url|
+        ret.files.last.urls << Metalink4FileUrl.new
+        ret.files.last.urls.last.url = url.content rescue nil
+        
+  
+        ret.files.last.urls.last.location = url.attr("location") rescue nil
+        ret.files.last.urls.last.priority = url.attr("priority") rescue nil
+        
+        #throw ret.files.last.urls.last
+      end
+      
+      file.search("metaurl").each do |metaurl|
+        ret.files.last.urls << Metalink4FileUrl.new
+        ret.files.last.urls.last.url = metaurl.content rescue nil
+        ret.files.last.urls.last.priority = metaurl.attr("priority") rescue nil
+      end
+    end
+    
+    ret
+    #throw self.accessors
+    #TODO: copy hashes
+    #TODO: multiple languages, os
+  end
 end

@@ -7,9 +7,9 @@
     <identity>Example</identity>
     <hash type="sha-256">f9aa8bb18fc4f34efe20093665a2f25969350f9208c26b035d3000d7bc81ca4f</hash>
     <language>en</language>
-    <url priority="1">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin</url>
-    <url location="nl" priority="1">http://download.xs4all.nl/test/10mb.bin</url>
-    <metaurl priority="2" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink-ruby/main/test/10mb.bin.torrent</metaurl>
+    <url priority="1">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin</url>
+    <url location="nl" priority="2">http://download.xs4all.nl/test/10mb.bin</url>
+    <metaurl priority="3" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent</metaurl>
     <pieces length="625664" type="sha-256">
       <hash>7b07ac3b6b0423ebb64d9927a120773f2eff0c78a6b28f69e9a467eda4effbd6</hash>
       <hash>108c7931aed21ec143f32cd5a8f09d934deb76cfdd6c9bc2f48cedac9ade3a57</hash>
