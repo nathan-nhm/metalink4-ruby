@@ -2,6 +2,7 @@
 
 require_relative '../lib/metalink4'
 
+=begin
 File.open('test/16.meta4', 'w') { |f| f.write(
 
 Metalink4.new(
@@ -63,5 +64,10 @@ File.open('test/single.meta4', 'w') { |f| f.write(
 
 
 File.open('test/single_again.meta4', 'w') { |f| f.write(
+  Metalink4.read('test/single.meta4').render
+) }
+
+=end
+File.open('test/1MB_again.meta4', 'w') { |f| f.write(
   Metalink4.read('test/1MB.meta4').render
 ) }

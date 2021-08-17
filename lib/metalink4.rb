@@ -7,6 +7,46 @@ require 'time'
 require 'nokogiri'
 
 ##
+# Because hash can't just be a string. We need to specify what type.
+
+class Metalink4FileHash
+  attr_accessor :hash_value,
+    :hash_type,
+    :piece
+ 
+  def initialize(opts = {})
+    self.hash_value = opts.fetch(:hash_value, nil)
+    self.hash_type = opts.fetch(:hash_type, nil)
+    self.piece = opts.fetch(:piece, nil)
+  end
+=begin
+  ##
+  # Hash must be in hexidecimal, lowercase
+  #
+  def hash_value=(v)
+    raise ("Improper Format '%s'" % v) if v && v !~ /[0-9a-f]+/
+    @hash_value = v
+  end
+  
+  ##
+  # sha-256
+  #
+  def hash_type=(v)
+    @hash_type = v
+  end
+  
+  ##
+  # nil if of whole file.
+  #
+  def piece=(v)
+    @piece = v
+  end
+=end
+end
+
+
+
+##
 # Describes the download urls of files listed in the Metalink 4 file
 class Metalink4FileUrl
   attr_accessor :url,
@@ -101,7 +141,8 @@ class Metalink4File
     :signature,
     :version,
     :piece_size,
-    :piece_count
+    :piece_count,
+    :hashes
     
   ##
   # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
@@ -130,6 +171,8 @@ class Metalink4File
     
     self.piece_size = file.fetch(:piece_size, nil) 
     self.piece_count = file.fetch(:piece_count, nil) 
+    
+    self.hashes = []
   end
   
   ##
@@ -168,11 +211,6 @@ class Metalink4File
     @piece_size = ((@local_path.size / v) / 1024.0).ceil * 1024 
   end
   
-  
-
-
-
-
   ##
   # The copyright of the file, human readble. URL should be ok, Or a full text.
   # Lack of this field does not assert ANY paticular state of copyright.
@@ -189,7 +227,6 @@ class Metalink4File
   def description=(v)
     @description = v
   end
-  
   
   ##
   # if "Firefox 3.5" the identity would be "Firefox"
@@ -257,8 +294,7 @@ class Metalink4File
     @version = v
   end
   
-  
-  
+
   
   ##
   # Fragement call for builder. 
@@ -266,14 +302,31 @@ class Metalink4File
   def render(builder_metalink, metalink4)
   
     raise "local path required" unless @local_path
+
+    #build up hashes if none were imported
+    if self.hashes.empty?
+      self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.file( self.local_path ).hexdigest, hash_type: "sha-256" )
+      if self.piece_size
+        i = 0
+        (0...self.local_path.size).step(self.piece_size).each do |offset|
+          self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.hexdigest(File.read(self.local_path, self.piece_size, offset)), hash_type: "sha-256", piece: i )
+          i += 1
+        end
+      end
+    end
+
+  
   
     metalink4.file( name: self.local_path ) do |metalink_file|
       metalink_file.copyright( self.copyright ) if self.copyright
       metalink_file.description( self.description ) if self.description
     
       metalink_file.identity( self.identity ) if self.identity 
-        
-      metalink_file.hash( Digest::SHA256.file( self.local_path ).hexdigest, type: "sha-256" ) #MAY MANY 
+   
+    
+      self.hashes.select{ |x| x.piece.nil? }.each do |hash|
+        metalink_file.hash(hash.hash_value, type: hash.hash_type)
+      end
       
       case self.language
       when Array
@@ -281,6 +334,7 @@ class Metalink4File
           metalink_file.language( language )
         end
       when String
+      
         metalink_file.language( self.language )
       end
 
@@ -303,10 +357,10 @@ class Metalink4File
           )
       end
 
-      if self.piece_size
-        metalink_file.pieces( length: self.piece_size, type: "sha-256" ) do |pieces| #MAY MANY, length is byte length of all chunks but the last
-          (0...self.local_path.size).step(self.piece_size).each do |offset|
-            pieces.hash Digest::SHA256.hexdigest(File.read(self.local_path, self.piece_size, offset))
+      if self.hashes.any?{ |x| x.piece }
+        metalink_file.pieces(length: self.piece_size, type: self.hashes.select{ |x| x.piece }.first.hash_type) do |pieces|
+          self.hashes.select{ |x| x.piece }.sort_by(&:piece).each do |hash|
+            metalink_file.hash(hash.hash_value)
           end
         end
       end
@@ -436,9 +490,6 @@ class Metalink4
   end
 
 
-
-# require_relative 'lib/metalink4'
-# Metalink4.read('test/single.meta4')
   def self.read(potential_file_path)
 
     begin
@@ -460,7 +511,16 @@ class Metalink4
     doc.search("metalink > file").each do |file|
     
       ret.files << Metalink4File.new
+      
+ 
+      
+      
       ret.files.last.local_path = file.attr("name")
+      
+
+      
+      
+      
       ret.files.last.copyright = file.at("copyright").content rescue nil
       ret.files.last.description = file.at("description").content rescue nil
       ret.files.last.identity = file.at("identity").content rescue nil
@@ -471,16 +531,39 @@ class Metalink4
       ret.files.last.publisher_url = file.at("publisher[url]").content rescue nil
       ret.files.last.signature = file.at("signature").content rescue nil
       ret.files.last.version = file.at("version").content rescue nil
+      
+
+      (file.search("hash") - file.search("pieces > hash")).each do |hash|
+        ret.files.last.hashes << Metalink4FileHash.new
+        ret.files.last.hashes.last.hash_value = hash.content rescue nil
+        ret.files.last.hashes.last.hash_type = hash.attr("type") rescue nil
+      end
+
+      ret.files.last.piece_size = file.at("pieces").attr("length").to_i rescue nil
+      piece_type = file.at("pieces").attr("type") rescue nil
+
+
+    ret.files.last.hashes  ||= []
+      file.search("pieces > hash").each_with_index do |hash, hash_piece_index|
+
+       
+        ret.files.last.hashes << Metalink4FileHash.new
+        ret.files.last.hashes.last.hash_value = (hash.content rescue nil)
+        ret.files.last.hashes.last.hash_type = piece_type
+        ret.files.last.hashes.last.piece = hash_piece_index
+        
+        
+       # puts [hash.content, piece_type, hash_piece_index, ret.files.last.hashes.last].inspect
+      end
+      
+      
+     # puts ret.files.last.hashes.inspect
 
       file.search("url").each do |url|
         ret.files.last.urls << Metalink4FileUrl.new
         ret.files.last.urls.last.url = url.content rescue nil
-        
-  
         ret.files.last.urls.last.location = url.attr("location") rescue nil
         ret.files.last.urls.last.priority = url.attr("priority") rescue nil
-        
-        #throw ret.files.last.urls.last
       end
       
       file.search("metaurl").each do |metaurl|
