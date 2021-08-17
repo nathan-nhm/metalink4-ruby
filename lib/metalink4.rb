@@ -19,7 +19,7 @@ class Metalink4FileHash
     self.hash_type = opts.fetch(:hash_type, nil)
     self.piece = opts.fetch(:piece, nil)
   end
-=begin
+  
   ##
   # Hash must be in hexidecimal, lowercase
   #
@@ -41,7 +41,7 @@ class Metalink4FileHash
   def piece=(v)
     @piece = v
   end
-=end
+
 end
 
 
