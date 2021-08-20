@@ -15,6 +15,8 @@ class Metalink4FileHash
     :piece
  
   def initialize(opts = {})
+    opts = opts.transform_keys {|key| key.to_sym }
+    
     self.hash_value = opts.fetch(:hash_value, nil)
     self.hash_type = opts.fetch(:hash_type, nil)
     self.piece = opts.fetch(:piece, nil)
@@ -55,17 +57,19 @@ class Metalink4FileUrl
   ##
   # Options: url, location, priority.
   # if only a string it profided it must be the URL.
-  def initialize(url = {})
+  def initialize(opts = {})
+    
     self.priority = 1
-    case url
+    case opts
     when String
-      self.url = url
+      self.url = opts
     when Hash
-      self.url = url[:url]
-      self.location = url[:location]
-      self.priority = url[:priority]
+      opts = opts.transform_keys {|key| key.to_sym }
+      self.url = opts[:url]
+      self.location = opts[:location]
+      self.priority = opts[:priority]
     else
-      raise "URL format"
+      raise "URL format %s" % opts.inspect
     end
   end
 
@@ -126,8 +130,7 @@ end
 #Describes the files listed in the Metalink 4 file
 class Metalink4File
 
-  attr_accessor :init,
-    :local_path,
+  attr_accessor :local_path,
     :copyright,
     :description,
     :identity,
@@ -146,46 +149,44 @@ class Metalink4File
     
   ##
   # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
-  def initialize(file = {})
-  
-  
-    self.init = file
+  def initialize(opts = {})
+    opts = opts.transform_keys {|key| key.to_sym }
     
     self.language = []
     self.os = []
     
   
-    self.local_path = file.fetch(:local_path, nil)
-    self.copyright = file.fetch(:copyright, nil)
-    self.description = file.fetch(:description, nil)
-    self.identity = file.fetch(:identity, nil)
-    case file.fetch(:language, nil)
+    self.local_path = opts.fetch(:local_path, nil)
+    self.copyright = opts.fetch(:copyright, nil)
+    self.description = opts.fetch(:description, nil)
+    self.identity = opts.fetch(:identity, nil)
+    case opts.fetch(:language, nil)
     when Array
-        self.language = file.fetch(:language, nil)
+        self.language = opts.fetch(:language, nil)
     when String
-        self.language = [file.fetch(:language, nil)]
+        self.language = [opts.fetch(:language, nil)]
     end
     
-    self.logo = file.fetch(:logo, nil)
-    case file.fetch(:os, nil)
+    self.logo = opts.fetch(:logo, nil)
+    case opts.fetch(:os, nil)
     when Array
-        self.os = file.fetch(:os, nil)
+        self.os = opts.fetch(:os, nil)
     when String
-        self.os = [file.fetch(:os, nil)]
+        self.os = [opts.fetch(:os, nil)]
     end
 
     self.urls = []
-    file.fetch(:urls, []).each do |url|
+    opts.fetch(:urls, []).each do |url|
       self.urls << Metalink4FileUrl.new(url)
     end
       
-    self.publisher_name = file.fetch(:publisher_name, nil)
-    self.publisher_url = file.fetch(:publisher_url, nil) ? URI.parse(file.fetch(:publisher_url, nil)) : nil
-    self.signature = file.fetch(:signature, nil)
-    self.version = file.fetch(:version, nil)
+    self.publisher_name = opts.fetch(:publisher_name, nil)
+    self.publisher_url = opts.fetch(:publisher_url, nil)
+    self.signature = opts.fetch(:signature, nil)
+    self.version = opts.fetch(:version, nil)
     
-    self.piece_size = file.fetch(:piece_size, nil) 
-    self.piece_count = file.fetch(:piece_count, nil) 
+    self.piece_size = opts.fetch(:piece_size, nil) 
+    self.piece_count = opts.fetch(:piece_count, nil) 
     
     self.hashes = []
   end
@@ -297,7 +298,7 @@ class Metalink4File
   #
   # These hashes will be SHA256
   def checksum!(path = nil, opts = {})
-  #puts Dir.pwd
+    opts = opts.transform_keys {|key| key.to_sym }
   
     raise "Path uses differnt extension" if path && File.extname(path) != File.extname(self.local_path)
   
@@ -370,37 +371,33 @@ class Metalink4File
       #multiple languages possible
       self.language.each do |language|
         metalink_file.language( language )
-      end
-
+      end if self.language
 
       metalink_file.logo( self.logo ) if self.logo
       
       #multiple operating systems possible
       self.os.each do |os|
         metalink_file.os( os )
-      end
+      end if self.os
       
       self.urls.each do |file_url|
         file_url.render(
           metalink_file,
           self.local_path
           )
-      end
-
-      if self.hashes.any?{ |x| x.piece }
-        metalink_file.pieces(length: self.piece_size, type: self.hashes.select{ |x| x.piece }.first.hash_type) do |pieces|
-          self.hashes.select{ |x| x.piece }.sort_by(&:piece).each do |hash|
-            metalink_file.hash(hash.hash_value)
-          end
+      end if self.urls
+      
+      metalink_file.pieces(length: self.piece_size, type: self.hashes.select{ |x| x.piece }.first.hash_type) do |pieces|
+        self.hashes.select{ |x| x.piece }.sort_by(&:piece).each do |hash|
+          metalink_file.hash(hash.hash_value)
         end
-      end
+      end if self.hashes.any?{ |x| x.piece }
           
       metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url
 
       #what other type is it going to be
       metalink_file.signature( ("\n%s\n" % self.signature), mediatype: "application/pgp-signature" ) if self.signature
-      
-    
+
       metalink_file.size( self.size ) #SHOULD, file bytesize
       metalink_file.version( self.version ) if self.version
     end
@@ -441,21 +438,16 @@ end
 # https://en.wikipedia.org/wiki/Metalink
 class Metalink4
 
-
   attr_accessor :files,
     :published,
     :updated,
     :origin,
     :origin_dynamic,
     :xml
-    
-    
-    
+
   ##
   # Options: files, published, updated, origin, origin_dynamic
   def initialize(opts = {})
-  
-  
     opts = opts.transform_keys {|key| key.to_sym }
   
     self.files = []
@@ -613,8 +605,5 @@ class Metalink4
     end
     
     ret
-    #throw self.accessors
-    #TODO: copy hashes
-    #TODO: multiple languages, os
   end
 end

@@ -3,7 +3,7 @@
 require_relative '../lib/metalink4'
 
 
-=begin
+
 File.open('test/16.meta4', 'w') { |f| f.write(
 
 Metalink4.new(
@@ -68,13 +68,10 @@ File.open('test/single_again.meta4', 'w') { |f| f.write(
   Metalink4.read('test/single.meta4').render
 ) }
 
+
 File.open('test/1MB_again.meta4', 'w') { |f| f.write(
   Metalink4.read('test/1MB.meta4').render
 ) }
-
-
-=end
-
 
 
 File.open('test/full.meta4', 'w') { |f| 
@@ -121,6 +118,7 @@ SOFTWARE.)
       
       full.files.last.publisher_name = "Sudrien"
       full.files.last.publisher_url = "https://sudrien.net/"
+      # gpg -ab test/10mb.bin
       full.files.last.signature = %Q(-----BEGIN PGP SIGNATURE-----
 
 iQGzBAABCAAdFiEE4aCsdxZbNnMhEdEGV40AumdeEVQFAmEfC/wACgkQV40Aumde

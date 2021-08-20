@@ -4,10 +4,15 @@ Class to format Metalink 4 / rfc5854 / .meta4 XML
 
 No code taken from timsjoberg/metalink-ruby
 
+All rfc5854 metadata is supported, as well as Chunk checksumming, for
+detecting errors early on bad internet connections - see piece_size and
+piece_count options. 
 
-All rfc5854 metadata in the process of being supported. Only supporting sha-256, as reccomended by the spec - so no configuration options there.
+See test/ folder for invocation examples.
 
-Chunk checksumming is supported, for detecting errors early on bad internet connections. Specify piece_size (in bytes) or piece_count.
+All internally generated checksums are sha-256. Other checksum types
+must be passed in.
+
 
 
 
@@ -23,7 +28,8 @@ Download all files? 1MB.meta4.#1 a result, not obvious how to get correct filena
 Download single file on that list, supposedly
 > wget --input-metalink=test/1MB.meta4 --metalink-index=1
 
-More: https://www.gnu.org/software/wget/manual/html_node/Logging-and-Input-File-Options.html
+More:
+  https://www.gnu.org/software/wget/manual/html_node/Logging-and-Input-File-Options.html
 
 
 ## aria2c example
@@ -38,9 +44,6 @@ Download single file on that list
 Check integrity of any files on disk instead of overwriting
 > aria2c test/1MB.meta4 --check-integrity=true
 
-More: https://aria2.github.io/manual/en/html/aria2c.html#bittorrent-metalink-options https://aria2.github.io/manual/en/html/aria2c.html#metalink-specific-options
-
-
-## Future development / documentation
-* usage samples
-* more passed-in data validation.
+More:
+  https://aria2.github.io/manual/en/html/aria2c.html#bittorrent-metalink-options
+  https://aria2.github.io/manual/en/html/aria2c.html#metalink-specific-options
