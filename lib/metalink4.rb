@@ -294,6 +294,30 @@ class Metalink4File
     @version = v
   end
   
+  ##
+  # Overwrite any present hashes. If no path is provided, checksum will be attempted of local_file.
+  # This might require a Dir.chdir.
+  #
+  # There is no protection of what this path can call - please sanitize any input to make sure files
+  # outside your project can't be checksummed. 
+  #
+  # These hashes will be SHA256
+  def checksum!(path = nil)
+  
+    path ||= self.local_path
+    
+    raise "File '%s' does not exist" %s if File.exist?(path)
+    
+    self.hashes = []
+    self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.file( self.local_path ).hexdigest, hash_type: "sha-256" )
+    if self.piece_size
+      i = 0
+      (0...self.local_path.size).step(self.piece_size).each do |offset|
+        self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.hexdigest(File.read(self.local_path, self.piece_size, offset)), hash_type: "sha-256", piece: i )
+        i += 1
+      end
+    end
+  end
 
   
   ##
@@ -301,18 +325,12 @@ class Metalink4File
   # For internal use.
   def render(builder_metalink, metalink4)
   
-    raise "local path required" unless @local_path
+    raise "Local path required" if !@local_path
+    raise "Local path does not match any files" if File.exist?(@local_path) || !self.hashes.empty?
 
     #build up hashes if none were imported
-    if self.hashes.empty?
-      self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.file( self.local_path ).hexdigest, hash_type: "sha-256" )
-      if self.piece_size
-        i = 0
-        (0...self.local_path.size).step(self.piece_size).each do |offset|
-          self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.hexdigest(File.read(self.local_path, self.piece_size, offset)), hash_type: "sha-256", piece: i )
-          i += 1
-        end
-      end
+    if self.hashes.empty? && File.exist?(@local_path)
+      self.checksum!
     end
 
   
@@ -489,7 +507,10 @@ class Metalink4
     self.xml.target!
   end
 
-
+  ##
+  # Read a .meta4 to internal model. Takes either a file path or XML sting.
+  #
+  # Will import any provided hashes, so nothing needs to be calculated.
   def self.read(potential_file_path)
 
     begin
@@ -511,16 +532,9 @@ class Metalink4
     doc.search("metalink > file").each do |file|
     
       ret.files << Metalink4File.new
-      
- 
-      
-      
-      ret.files.last.local_path = file.attr("name")
-      
 
-      
-      
-      
+      ret.files.last.local_path = file.attr("name")
+
       ret.files.last.copyright = file.at("copyright").content rescue nil
       ret.files.last.description = file.at("description").content rescue nil
       ret.files.last.identity = file.at("identity").content rescue nil
@@ -532,7 +546,6 @@ class Metalink4
       ret.files.last.signature = file.at("signature").content rescue nil
       ret.files.last.version = file.at("version").content rescue nil
       
-
       (file.search("hash") - file.search("pieces > hash")).each do |hash|
         ret.files.last.hashes << Metalink4FileHash.new
         ret.files.last.hashes.last.hash_value = hash.content rescue nil
@@ -543,22 +556,14 @@ class Metalink4
       piece_type = file.at("pieces").attr("type") rescue nil
 
 
-    ret.files.last.hashes  ||= []
+      ret.files.last.hashes  ||= []
       file.search("pieces > hash").each_with_index do |hash, hash_piece_index|
-
-       
         ret.files.last.hashes << Metalink4FileHash.new
         ret.files.last.hashes.last.hash_value = (hash.content rescue nil)
         ret.files.last.hashes.last.hash_type = piece_type
         ret.files.last.hashes.last.piece = hash_piece_index
-        
-        
-       # puts [hash.content, piece_type, hash_piece_index, ret.files.last.hashes.last].inspect
       end
       
-      
-     # puts ret.files.last.hashes.inspect
-
       file.search("url").each do |url|
         ret.files.last.urls << Metalink4FileUrl.new
         ret.files.last.urls.last.url = url.content rescue nil
