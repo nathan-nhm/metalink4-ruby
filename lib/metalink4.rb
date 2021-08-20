@@ -99,7 +99,6 @@ class Metalink4FileUrl
   
   
     begin
-  
       if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
         builder_metalink_file.url(
           self.url.to_s, {
@@ -111,7 +110,7 @@ class Metalink4FileUrl
         builder_metalink_file.metaurl(
           self.url.to_s, {
             priority: self.priority || 1,
-            mediatype: self.url.path =~ /\.torrent/ ? "torrent" : MIME::Types.type_for( self.url.path )
+            mediatype: self.url.path =~ /\.torrent/ ? "torrent" : MIME::Types.type_for( self.url.path ).first.to_s
             }.compact
           )
       end
@@ -142,7 +141,8 @@ class Metalink4File
     :version,
     :piece_size,
     :piece_count,
-    :hashes
+    :hashes,
+    :size
     
   ##
   # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
@@ -150,14 +150,29 @@ class Metalink4File
   
   
     self.init = file
+    
+    self.language = []
+    self.os = []
+    
   
     self.local_path = file.fetch(:local_path, nil)
     self.copyright = file.fetch(:copyright, nil)
     self.description = file.fetch(:description, nil)
     self.identity = file.fetch(:identity, nil)
-    self.language = file.fetch(:language, nil)
+    case file.fetch(:language, nil)
+    when Array
+        self.language = file.fetch(:language, nil)
+    when String
+        self.language = [file.fetch(:language, nil)]
+    end
+    
     self.logo = file.fetch(:logo, nil)
-    self.os = file.fetch(:os, nil)
+    case file.fetch(:os, nil)
+    when Array
+        self.os = file.fetch(:os, nil)
+    when String
+        self.os = [file.fetch(:os, nil)]
+    end
 
     self.urls = []
     file.fetch(:urls, []).each do |url|
@@ -190,27 +205,7 @@ class Metalink4File
     @local_path
   end
   
-  ##
-  # One of two options to enable piece hashes
-  # Overrides piece_count if set
-  # minimum size of 1KB for a piece
-  def piece_size=(v)
-    return unless v
-    @piece_count = nil
-    @piece_size = [v, 1024].max
-  end
 
-  ##
-  # One of two options to enable piece hashes
-  # Overrides piece_size if set
-  # This will be a multiple of 1024, and the last file will be slightly smaller
-  # this means 1KB is the minimum size for a piece
-  def piece_count=(v)
-    return if v.nil?
-    @piece_count = v
-    @piece_size = ((@local_path.size / v) / 1024.0).ceil * 1024 
-  end
-  
   ##
   # The copyright of the file, human readble. URL should be ok, Or a full text.
   # Lack of this field does not assert ANY paticular state of copyright.
@@ -242,8 +237,7 @@ class Metalink4File
   # See: https://datatracker.ietf.org/doc/html/rfc5646
   # One or more, optional.
   def language=(v)
-    @language ||= []
-    @language << v if v.is_a?(String)
+    @language = v.is_a?(String) ? [v] : v 
   end
   
   ##
@@ -259,8 +253,7 @@ class Metalink4File
   # See IANA registry named "Operating System Names"
   # at https://www.iana.org/assignments/operating-system-names/operating-system-names.xhtml
   def os=(v)
-    @os ||= []
-    @os << v if v.is_a?(String)
+    @os = v.is_a?(String) ? [v] : v
   end
   
   ##
@@ -282,8 +275,7 @@ class Metalink4File
   # OpenPGP Or somthing. The signature should match the referenced file.
   # One, Optional.
   def signature=(v)
-    @signature ||= []
-    @signature << v if v.is_a?(String)
+    @signature = v
   end
   
   ##
@@ -301,19 +293,52 @@ class Metalink4File
   # There is no protection of what this path can call - please sanitize any input to make sure files
   # outside your project can't be checksummed. 
   #
+  # options: debug - show full path on error dump, piece_size - bytes, integer, OR piece_count - integer
+  #
   # These hashes will be SHA256
-  def checksum!(path = nil)
+  def checksum!(path = nil, opts = {})
+  #puts Dir.pwd
+  
+    raise "Path uses differnt extension" if path && File.extname(path) != File.extname(self.local_path)
+  
+  
+    if opts[:debug]
+     raise ("File '%s' does not exist" % File.expand_path( path ) ) if path && !File.exist?( File.expand_path( path ) )
+    else
+      raise ("File '%s' does not exist" % path ) if path && !File.exist?( File.expand_path( path ) )
+    end
+    
+    raise "Can not specify both piece_size and piece_count" if opts[:piece_size] && opts[:piece_count]
+    raise "piece_size must be an Integer" if opts[:piece_size] && !opts[:piece_size].is_a?(Integer)
+    raise "piece_count must be an Integer" if opts[:piece_count] && !opts[:piece_count].is_a?(Integer)
   
     path ||= self.local_path
-    
-    raise "File '%s' does not exist" %s if File.exist?(path)
-    
+  
+    #get filesize
+    self.size = File.size( File.expand_path( path ) )
+
+    # Overrides piece_count if set
+    # minimum size of 1KB for a piece
+    if opts[:piece_size]
+      @piece_count = nil
+      @piece_size = [opts[:piece_size], 1024].max
+    end
+
+
+    # Overrides piece_size if set
+    # This will be a multiple of 1024, and the last file will be slightly smaller
+    # this means 1KB is the minimum size for a piece
+    if opts[:piece_count]
+      @piece_count = opts[:piece_count]
+      @piece_size = ((@size / @piece_count) / 1024.0).ceil * 1024 
+    end
+
     self.hashes = []
-    self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.file( self.local_path ).hexdigest, hash_type: "sha-256" )
+    self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.file( File.expand_path( path ) ).hexdigest, hash_type: "sha-256" )
     if self.piece_size
       i = 0
-      (0...self.local_path.size).step(self.piece_size).each do |offset|
-        self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.hexdigest(File.read(self.local_path, self.piece_size, offset)), hash_type: "sha-256", piece: i )
+      (0...@size).step(self.piece_size).each do |offset|
+        self.hashes << Metalink4FileHash.new( hash_value: Digest::SHA256.hexdigest(File.read(File.expand_path( path ), self.piece_size, offset)), hash_type: "sha-256", piece: i )
         i += 1
       end
     end
@@ -326,48 +351,35 @@ class Metalink4File
   def render(builder_metalink, metalink4)
   
     raise "Local path required" if !@local_path
-    raise "Local path does not match any files" if File.exist?(@local_path) || !self.hashes.empty?
+    #raise ("Local path '%s' does not match any files" % @local_path) if File.exist?(@local_path) || !self.hashes.empty?
 
     #build up hashes if none were imported
     if self.hashes.empty? && File.exist?(@local_path)
       self.checksum!
     end
 
-  
-  
     metalink4.file( name: self.local_path ) do |metalink_file|
-      metalink_file.copyright( self.copyright ) if self.copyright
+      metalink_file.copyright( ("\n%s\n" % self.copyright) ) if self.copyright
       metalink_file.description( self.description ) if self.description
-    
       metalink_file.identity( self.identity ) if self.identity 
-   
-    
+
       self.hashes.select{ |x| x.piece.nil? }.each do |hash|
         metalink_file.hash(hash.hash_value, type: hash.hash_type)
       end
       
-      case self.language
-      when Array
-        self.language.each do |language|
-          metalink_file.language( language )
-        end
-      when String
-      
-        metalink_file.language( self.language )
+      #multiple languages possible
+      self.language.each do |language|
+        metalink_file.language( language )
       end
+
 
       metalink_file.logo( self.logo ) if self.logo
       
-      case self.os
-      when Array
-        self.os.each do |os|
-          metalink_file.os( os )
-        end
-      when String
-        metalink_file.os( self.os )
+      #multiple operating systems possible
+      self.os.each do |os|
+        metalink_file.os( os )
       end
       
-
       self.urls.each do |file_url|
         file_url.render(
           metalink_file,
@@ -385,19 +397,41 @@ class Metalink4File
           
       metalink_file.publisher( name: self.publisher_name, url: self.publisher_url.to_s) if self.publisher_name || self.publisher_url
 
-      case self.signature
-      when Array
-        self.signature.each do |signature|
-          metalink_file.signature( signature, mediatype: MIME::Types.type_for( signature ) )
-        end
-      when String
-        metalink_file.signature( self.signature, mediatype: MIME::Types.type_for( self.signature ) )
-      end
+      #what other type is it going to be
+      metalink_file.signature( ("\n%s\n" % self.signature), mediatype: "application/pgp-signature" ) if self.signature
+      
     
-      metalink_file.size( self.local_path.size ) #SHOULD, file bytesize
+      metalink_file.size( self.size ) #SHOULD, file bytesize
       metalink_file.version( self.version ) if self.version
     end
   end
+  
+  
+
+  ##
+  # One of two options to enable piece hashes
+  # Overrides piece_count if set
+  # minimum size of 1KB for a piece
+  def piece_size=(v)
+    return unless v
+    @piece_count = nil
+    @piece_size = [v, 1024].max
+  end
+
+private
+
+  ##
+  # private becaue checksum! is a preferred call
+  # One of two options to enable piece hashes
+  # Overrides piece_size if set
+  # This will be a multiple of 1024, and the last file will be slightly smaller
+  # this means 1KB is the minimum size for a piece
+  def piece_count=(v)
+    return if v.nil?
+    @piece_count = v
+    @piece_size = ((@local_path.size / v) / 1024.0).ceil * 1024 
+  end
+  
   
 end
 

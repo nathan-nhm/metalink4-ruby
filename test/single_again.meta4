@@ -10,7 +10,7 @@
     <url priority="1">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin</url>
     <url location="nl" priority="2">http://download.xs4all.nl/test/10mb.bin</url>
     <metaurl priority="3" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent</metaurl>
-    <size>10000000</size>
+    <size/>
     <version>1.0</version>
   </file>
 </metalink>

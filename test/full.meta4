@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metalink xmlns="urn:ietf:params:xml:ns:metalink">
+  <generator>Sudrien/metalink-ruby 0.2.0</generator>
+  <origin dynamic="">true</origin>
+  <published>2021-08-19T23:57:00-04:00</published>
+  <updated>2021-08-19T23:57:00-04:00</updated>
+  <file name="10mb_stuff.bin">
+    <copyright>
+MIT License
+
+Copyright (c) 2021 Sudrien
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</copyright>
+    <description>10 Megabyte binary test file</description>
+    <identity>10mb</identity>
+    <hash type="sha-256">f9aa8bb18fc4f34efe20093665a2f25969350f9208c26b035d3000d7bc81ca4f</hash>
+    <language>en</language>
+    <language>nl</language>
+    <language>fr</language>
+    <logo>https://avatars.githubusercontent.com/u/24167</logo>
+    <os>FREEBSD</os>
+    <url priority="1">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin</url>
+    <url location="nl" priority="2">http://download.xs4all.nl/test/10mb.bin</url>
+    <metaurl priority="3" mediatype="torrent">https://raw.githubusercontent.com/Sudrien/metalink4-ruby/main/test/10mb.bin.torrent</metaurl>
+    <pieces length="3334144" type="sha-256">
+      <hash>faea5b7c0d575e8bc1377435918c029277266e126c43f23913fce59dbc084196</hash>
+      <hash>6a4f3e171c974907899e31ffa48aba14efb5a41f8cb32116dc0bffdfb17aac98</hash>
+      <hash>849ffc48b6dc16bef31b641b7de7bb1847bad364317e3b766f8aebc851e9a04a</hash>
+    </pieces>
+    <publisher name="Sudrien" url="https://sudrien.net/"/>
+    <signature mediatype="application/pgp-signature">
+-----BEGIN PGP SIGNATURE-----
+
+iQGzBAABCAAdFiEE4aCsdxZbNnMhEdEGV40AumdeEVQFAmEfC/wACgkQV40Aumde
+EVRrzQv6AgJjZHqVTx0pYDZW+JeNtXx/Yh/H5YR5Whi0VRi9r67zZ2vXKf99yfru
+H57wVHYYXO2Nv7NbwXiZmKAzD0w3r220n2DRWejENOtZ21JuE6bjeWs1FAVUfZ1q
+I2EtSn/qwZaML+Pw8OmF75U1Yp20F5um8MY/yw0ZhO8FT89QkpFChRct+39Ls1MG
+JYSUDJKY4dEzO6nD6pwO2LUwaZUezbgDDhqp+sg2ouQUtLfA7kJgk2hzJ9xPm6W8
+VRsUKoJIriVZ7iCJTnfzG7Y2lM5FHT5gGtBgoEXTPaImTgVgrQBNGfJQ9MBClzaW
+6UE85/DMs0rPo/a9qP/5vme7ngze7va9VrP7VgRYDsDhGQpoGxf0k3r9YKPjto/T
+90H4SGOGANBaFnXSN2NlkFOP5HFTKKYvIQkP86lA9AHR/ti9PdtsHvYEcN38LSZ5
+AayZrrvbUIDUPOu1Qenjk037T804UT/Rbe6UmY5Yx2bG+BrpsPPLmGQdT2cGLbUD
+dicaRy/5
+=Ixe6
+-----END PGP SIGNATURE-----
+
+</signature>
+    <size>10000000</size>
+    <version>1.0</version>
+  </file>
+</metalink>
