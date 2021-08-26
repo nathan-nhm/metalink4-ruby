@@ -5,6 +5,7 @@ require 'digest'
 require 'mime/types'
 require 'time'
 require 'nokogiri'
+require 'uri'
 
 ##
 # Because hash can't just be a string. We need to specify what type.
@@ -15,7 +16,7 @@ class Metalink4FileHash
     :piece
  
   def initialize(opts = {})
-    opts = opts.transform_keys {|key| key.to_sym }
+    opts = opts.inject({}){ |r, (k,v)| r[k.to_sym] = v; r }
     
     self.hash_value = opts.fetch(:hash_value, nil)
     self.hash_type = opts.fetch(:hash_type, nil)
@@ -64,7 +65,7 @@ class Metalink4FileUrl
     when String
       self.url = opts
     when Hash
-      opts = opts.transform_keys {|key| key.to_sym }
+      opts = opts.inject({}){ |r, (k,v)| r[k.to_sym] = v; r }
       self.url = opts[:url]
       self.location = opts[:location]
       self.priority = opts[:priority]
@@ -100,28 +101,25 @@ class Metalink4FileUrl
   # Fragement call for builder.
   # For internal use.
   def render(builder_metalink_file, local_path)
-  
-  
     begin
       if MIME::Types.type_for(local_path.to_s).first == MIME::Types.type_for( self.url.path ).first
         builder_metalink_file.url(
           self.url.to_s, {
             location: self.location,
             priority: self.priority || 1,
-            }.compact
+            }.delete_if{ |k, v| v.nil? }
           )
       else
         builder_metalink_file.metaurl(
           self.url.to_s, {
             priority: self.priority || 1,
             mediatype: self.url.path =~ /\.torrent/ ? "torrent" : MIME::Types.type_for( self.url.path ).first.to_s
-            }.compact
+            }.delete_if{ |k, v| v.nil? }
           )
       end
-    
     rescue
-     puts [local_path, self.url]
-     throw [local_path, self.url]
+      puts [local_path, self.url]
+      throw [local_path, self.url]
     end
   end
 end
@@ -150,7 +148,7 @@ class Metalink4File
   ##
   # Options: local_path, copyright, description, identity, language, logo, os, urls, publisher_name, publisher_url, signature, version, piece_size, piece_count
   def initialize(opts = {})
-    opts = opts.transform_keys {|key| key.to_sym }
+    opts = opts.inject({}){ |r, (k,v)| r[k.to_sym] = v; r }
     
     self.language = []
     self.os = []
@@ -298,7 +296,7 @@ class Metalink4File
   #
   # These hashes will be SHA256
   def checksum!(path = nil, opts = {})
-    opts = opts.transform_keys {|key| key.to_sym }
+    opts = opts.inject({}){ |r, (k,v)| r[k.to_sym] = v; r }
   
     raise "Path uses differnt extension" if path && File.extname(path) != File.extname(self.local_path)
   
@@ -448,7 +446,7 @@ class Metalink4
   ##
   # Options: files, published, updated, origin, origin_dynamic
   def initialize(opts = {})
-    opts = opts.transform_keys {|key| key.to_sym }
+    opts = opts.inject({}){ |r, (k,v)| r[k.to_sym] = v; r }
   
     self.files = []
     

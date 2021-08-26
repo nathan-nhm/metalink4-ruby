@@ -11,6 +11,8 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/Sudrien/metalink4-ruby'
   s.license     = 'MIT'
 
+  s.required_ruby_version = Gem::Requirement.new(">= 1.9.3")
+  
   s.add_runtime_dependency "builder"
   s.add_runtime_dependency "mime-types"
   s.add_runtime_dependency "nokogiri"
