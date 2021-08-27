@@ -13,6 +13,7 @@ must be calculates externally and passed in.
 
 No code taken from timsjoberg/metalink-ruby.
 
+[![Gem Version](https://badge.fury.io/rb/metalink4-ruby.svg)](https://badge.fury.io/rb/metalink4-ruby)
 
 ## Installation
 
