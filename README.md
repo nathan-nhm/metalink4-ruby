@@ -63,8 +63,8 @@ Check integrity of any files on disk instead of overwriting
 > aria2c test/1MB.meta4 --check-integrity=true
 
 More:
-  https://aria2.github.io/manual/en/html/aria2c.html#bittorrent-metalink-options
-  https://aria2.github.io/manual/en/html/aria2c.html#metalink-specific-options
+* https://aria2.github.io/manual/en/html/aria2c.html#bittorrent-metalink-options
+* https://aria2.github.io/manual/en/html/aria2c.html#metalink-specific-options
   
 
 
@@ -79,4 +79,4 @@ Download single file on that list, supposedly
 > wget --input-metalink=test/1MB.meta4 --metalink-index=1
 
 More:
-  https://www.gnu.org/software/wget/manual/html_node/Logging-and-Input-File-Options.html
+* https://www.gnu.org/software/wget/manual/html_node/Logging-and-Input-File-Options.html
