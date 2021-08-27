@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.summary     = "Class to format Metalink 4 / rfc5854 / .meta4 XML"
   s.authors     = ["Sudrien"]
   s.email       = '_+github@sudrien.net'
-  s.files       = Dir['lib/**/*'] + ['metalink4-ruby.gemfile','README.md','rfc5854.txt','LICENSE','test/test.rb']
+  s.files       = ['lib/metalink4.rb', 'metalink4-ruby.gemfile','README.md','rfc5854.txt','LICENSE']
   s.require_paths = ["lib"]
   s.homepage    = 'https://github.com/Sudrien/metalink4-ruby'
   s.license     = 'MIT'
