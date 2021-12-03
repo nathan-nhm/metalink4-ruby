@@ -19,12 +19,18 @@ No code taken from timsjoberg/metalink-ruby.
 
 Requirements:
 
-- Ruby >= 1.9.3
+- Ruby >= 2.0
 
 ``` sh
 $ gem install metalink4-ruby
 ```
 
+- Ruby = 1.9.3
+
+``` sh
+$ gem install mime-types -v="2.99.3"
+$ gem install metalink4-ruby --conservative
+```
 
 ## Generation Examples
 
