@@ -36,6 +36,11 @@ $ gem install metalink4-ruby --conservative
 
 Please see https://github.com/Sudrien/metalink4-ruby/blob/main/test/test.rb
 
+## Servier Side support
+
+To support file chunking in ruby, you need more header management than normal. 
+
+https://github.com/Pavel-Guseynov/send_file_with_range
 
 ## Download Examples
 
@@ -64,9 +69,9 @@ Show file list
 > aria2c test/1MB.meta4 -S
 
 Download single file on that list
-> aria2c test/1MB.meta4 --select-file=1
+> aria2c test/1MB.meta4 --follow-metalink=mem --select-file=1
 
-Check integrity of any files on disk instead of overwriting
+Check integrity of any files on disk (instead of overwriting?)
 > aria2c test/1MB.meta4 --check-integrity=true
 
 More:
